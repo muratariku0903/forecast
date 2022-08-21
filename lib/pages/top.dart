@@ -1,8 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:tmp/pages/result.dart';
+import 'package:tmp/classes/geolocation.dart';
+import 'package:geolocator/geolocator.dart';
 
-class TopPage extends StatelessWidget {
+class TopPage extends StatefulWidget {
   const TopPage({Key? key}) : super(key: key);
+
+  @override
+  State<TopPage> createState() => _TopPageState();
+}
+
+class _TopPageState extends State<TopPage> {
+  final geolocation = Geolocation();
+  String location = '';
+
+  void setLocation() async {
+    final Position position = await geolocation.determinePosition();
+    print(position);
+    setState(() {
+      location = position.toString();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -71,6 +89,23 @@ class TopPage extends StatelessWidget {
                     ),
                   ),
                 ),
+                Expanded(
+                  flex: 1,
+                  child: Container(
+                    color: Colors.green,
+                    child: Column(
+                      children: [
+                        Text(
+                          location,
+                        ),
+                        TextButton(
+                          onPressed: setLocation,
+                          child: const Text('Get location info.'),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
@@ -84,7 +119,7 @@ class TopPage extends StatelessWidget {
             onPressed: () => Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => ResultPage(),
+                builder: (context) => const ResultPage(),
               ),
             ),
             child: const Text(
