@@ -13,13 +13,13 @@ class TopPage extends StatefulWidget {
 class _TopPageState extends State<TopPage> {
   final geolocation = Geolocation();
   String location = '';
+  String cityName = '';
+  bool isInvalid = false;
+  String validateMsg = 'Please valid city name.';
 
   void setLocation() async {
     final Position position = await geolocation.determinePosition();
-    print(position);
-    setState(() {
-      location = position.toString();
-    });
+    setState(() => location = position.toString());
   }
 
   @override
@@ -47,7 +47,7 @@ class _TopPageState extends State<TopPage> {
           ),
           Container(
             width: double.infinity,
-            color: const Color.fromRGBO(255, 193, 7, 0.7),
+            color: const Color.fromRGBO(255, 193, 7, 0.9),
             padding: const EdgeInsets.all(10),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -71,16 +71,25 @@ class _TopPageState extends State<TopPage> {
                     padding: const EdgeInsets.all(30),
                     alignment: Alignment.center,
                     child: TextFormField(
-                      decoration: const InputDecoration(
+                      onChanged: (String value) {
+                        setState(() {
+                          cityName = value;
+                          if (isInvalid) isInvalid = true;
+                        });
+                      },
+                      autovalidateMode: AutovalidateMode.always,
+                      validator: (value) => isInvalid ? validateMsg : null,
+                      decoration: InputDecoration(
                         labelText: 'city name.',
-                        labelStyle: TextStyle(color: Colors.black),
+                        labelStyle: TextStyle(
+                            color: isInvalid ? Colors.red : Colors.black),
                         fillColor: Colors.white,
-                        focusedBorder: OutlineInputBorder(
+                        focusedBorder: const OutlineInputBorder(
                           borderSide: BorderSide(
                             color: Colors.black,
                           ),
                         ),
-                        enabledBorder: OutlineInputBorder(
+                        enabledBorder: const OutlineInputBorder(
                           borderSide: BorderSide(
                             color: Colors.black,
                           ),
@@ -116,12 +125,19 @@ class _TopPageState extends State<TopPage> {
           height: 50,
           color: Colors.black,
           child: TextButton(
-            onPressed: () => Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => const ResultPage(),
-              ),
-            ),
+            onPressed: () {
+              if (cityName.isEmpty) {
+                setState(() => isInvalid = true);
+                return;
+              }
+
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const ResultPage(),
+                ),
+              );
+            },
             child: const Text(
               'FORECAST!',
               style: TextStyle(

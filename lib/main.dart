@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:tmp/pages/top.dart';
-import 'package:tmp/pages/result.dart';
 
 void main() {
   runApp(const MyApp());
@@ -16,7 +15,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: TopPage(),
+      home: const TopPage(),
     );
   }
 }
