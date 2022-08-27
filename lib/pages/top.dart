@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:tmp/pages/result.dart';
 import 'package:tmp/classes/geolocation.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:tmp/classes/weather.dart';
+import 'package:tmp/constants/weatherApiKey.dart';
 
 class TopPage extends StatefulWidget {
   const TopPage({Key? key}) : super(key: key);
@@ -12,14 +14,27 @@ class TopPage extends StatefulWidget {
 
 class _TopPageState extends State<TopPage> {
   final geolocation = Geolocation();
+  final weather = Weather(weatherApiKey: weatherApiKey);
   String location = '';
+  double? temp;
+  String? condition;
   String cityName = '';
-  bool isInvalid = false;
+  bool isInvalidCityName = false;
   String validateMsg = 'Please valid city name.';
 
-  void setLocation() async {
+  void setWeather() async {
     final Position position = await geolocation.determinePosition();
-    setState(() => location = position.toString());
+    double lat = position.latitude;
+    double lon = position.longitude;
+    WeatherInfo? weatherInfo = await weather.getWeatherFromLocation(lat, lon);
+
+    setState(() {
+      location = position.toString();
+      if (weatherInfo != null) {
+        temp = weatherInfo.temp;
+        condition = weatherInfo.condition;
+      }
+    });
   }
 
   @override
@@ -59,7 +74,7 @@ class _TopPageState extends State<TopPage> {
                     child: const Text(
                       'Enter city name.',
                       style: TextStyle(
-                        fontSize: 20,
+                        fontSize: 30,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -74,15 +89,17 @@ class _TopPageState extends State<TopPage> {
                       onChanged: (String value) {
                         setState(() {
                           cityName = value;
-                          if (isInvalid) isInvalid = true;
+                          isInvalidCityName = value.isEmpty;
                         });
                       },
                       autovalidateMode: AutovalidateMode.always,
-                      validator: (value) => isInvalid ? validateMsg : null,
+                      validator: (value) =>
+                          isInvalidCityName ? validateMsg : null,
                       decoration: InputDecoration(
                         labelText: 'city name.',
                         labelStyle: TextStyle(
-                            color: isInvalid ? Colors.red : Colors.black),
+                            color:
+                                isInvalidCityName ? Colors.red : Colors.black),
                         fillColor: Colors.white,
                         focusedBorder: const OutlineInputBorder(
                           borderSide: BorderSide(
@@ -104,11 +121,11 @@ class _TopPageState extends State<TopPage> {
                     color: Colors.green,
                     child: Column(
                       children: [
-                        Text(
-                          location,
-                        ),
+                        if (location != '') Text(location),
+                        if (temp != null) Text('Temp : ${temp.toString()}'),
+                        if (condition != null) Text(condition!),
                         TextButton(
-                          onPressed: setLocation,
+                          onPressed: setWeather,
                           child: const Text('Get location info.'),
                         ),
                       ],
@@ -127,22 +144,20 @@ class _TopPageState extends State<TopPage> {
           child: TextButton(
             onPressed: () {
               if (cityName.isEmpty) {
-                setState(() => isInvalid = true);
+                setState(() => isInvalidCityName = true);
                 return;
               }
 
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => const ResultPage(),
+                  builder: (context) => ResultPage(cityName: cityName),
                 ),
               );
             },
             child: const Text(
               'FORECAST!',
-              style: TextStyle(
-                color: Colors.amber,
-              ),
+              style: TextStyle(color: Colors.amber),
             ),
           ),
         ),

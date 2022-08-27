@@ -1,50 +1,66 @@
-import 'dart:html';
-
 import 'package:flutter/material.dart';
-import 'package:tmp/classes/geolocation.dart';
-import 'package:weather/weather.dart';
-import 'package:geolocator/geolocator.dart';
+import 'package:tmp/classes/weather.dart';
+import 'package:tmp/constants/weatherApiKey.dart';
 
 class ResultPage extends StatefulWidget {
-  final double lat;
-  final double lon;
-  const ResultPage({Key? key, required this.lat, required this.lon})
-      : super(key: key);
+  final String cityName;
+  const ResultPage({Key? key, required this.cityName}) : super(key: key);
 
   @override
   State<ResultPage> createState() => _ResultPageState();
 }
 
 class _ResultPageState extends State<ResultPage> {
-  final WeatherFactory wf = WeatherFactory('1fd9bd35b75f1f31e2fb075342367115',
-      language: Language.JAPANESE);
-  final Geolocation geolocation = Geolocation();
+  final weather = Weather(weatherApiKey: weatherApiKey);
+  double? temp;
+  String? condition;
+  bool isErr = false;
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
+    setWeather();
   }
 
-  List<> getLocation() {
+  void setWeather() async {
+    WeatherInfo? weatherInfo =
+        await weather.getWeatherFromCityName(widget.cityName);
 
+    if (weatherInfo == null) {
+      print('hello');
+      setState(() {
+        isErr = true;
+      });
+      return;
+    }
+
+    setState(() {
+      temp = weatherInfo.temp;
+      condition = weatherInfo.condition;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('WEATHER FORECAST RESULT'),
-      ),
+      appBar: AppBar(title: const Text('WEATHER FORECAST RESULT')),
       body: Center(
-        child: Column(
-          children: const [
-            Text('sample.'),
-            Text('sample.'),
-            Text('sample.'),
-            Text('sample.'),
-            Text('sample.'),
-          ],
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            children: [
+              if (isErr) const Text('Fail get data.'),
+              if (!isErr)
+                Column(
+                  children: [
+                    const Text('Temp'),
+                    if (temp != null) Text(temp.toString()),
+                    const Text('Condition'),
+                    if (condition != null) Text(condition!),
+                  ],
+                ),
+            ],
+          ),
         ),
       ),
     );
